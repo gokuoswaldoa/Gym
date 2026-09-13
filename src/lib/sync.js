@@ -25,7 +25,7 @@ export const triggerSync = async () => {
       .upsert({ 
         id: USER_ID, 
         data: dataToSync,
-        updated_at: new Date().toISOString()
+        created_at: new Date().toISOString()
       });
 
     if (error) {
@@ -51,7 +51,7 @@ export const downloadSync = async () => {
 
     if (error || !data) return;
 
-    const cloudDate = new Date(data.updated_at);
+    const cloudDate = new Date(data.created_at);
     const localDateStr = localStorage.getItem('lastSync');
     
     // Si la nube tiene datos más recientes que nuestra última sincronización local
