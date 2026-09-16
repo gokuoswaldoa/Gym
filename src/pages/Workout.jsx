@@ -233,11 +233,16 @@ export default function Workout() {
     <div className="space-y-6 pb-20 relative">
       {/* Temporizador Flotante */}
       {isResting && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#111112] border-2 border-spidey-amber text-spidey-amber px-6 py-2 rounded-full shadow-[0_4px_20px_rgba(242,169,0,0.3)] flex items-center gap-4">
-          <span className="font-bebas text-2xl tracking-widest">{formatTime(restSeconds)}</span>
-          <button onClick={stopRestTimer} className="text-spidey-white hover:text-spidey-red transition-colors">
-            <TimerReset size={20} />
-          </button>
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#111112] border-2 border-spidey-amber text-spidey-amber px-6 py-3 rounded-2xl shadow-[0_4px_20px_rgba(242,169,0,0.3)] flex flex-col items-center gap-1 w-64 text-center">
+          <div className="flex items-center gap-4">
+            <span className="font-bebas text-3xl tracking-widest">{formatTime(restSeconds)}</span>
+            <button onClick={stopRestTimer} className="text-spidey-white hover:text-spidey-red transition-colors">
+              <TimerReset size={24} />
+            </button>
+          </div>
+          <span className="text-[9px] font-archivo text-spidey-gray uppercase mt-1 leading-tight">
+            Descanso: 90-120s (Pesados) | 60-90s (Aislamiento)
+          </span>
         </div>
       )}
 
