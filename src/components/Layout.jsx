@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { Home, Dumbbell, Clock, TrendingUp } from 'lucide-react';
+import { Home, Dumbbell, Clock, TrendingUp, CalendarDays } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -10,6 +10,7 @@ function cn(...inputs) {
 export default function Layout() {
   const navItems = [
     { to: '/', icon: Home, label: 'Inicio' },
+    { to: '/routines', icon: CalendarDays, label: 'Rutinas' },
     { to: '/workout', icon: Dumbbell, label: 'Rutina' },
     { to: '/history', icon: Clock, label: 'Historial' },
     { to: '/progress', icon: TrendingUp, label: 'Progreso' },

@@ -2,12 +2,13 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('GymTrackerDB');
 
-db.version(2).stores({
-  workouts: '++id, date, type, notes', // date can be an ISO string
-  exercises: '++id, name, category', // e.g. Chest, Back, Legs, Cardio
+db.version(3).stores({
+  workouts: '++id, date, type, notes',
+  exercises: '++id, name, category', 
   sets: '++id, workoutId, exerciseId, reps, weight, completed',
   cardioLogs: '++id, workoutId, duration, distance',
-  bodyWeightLogs: '++id, date, weight'
+  bodyWeightLogs: '++id, date, weight',
+  plannedRoutines: '++id, name, *days' // days: [0..6], exercises: [exerciseId1, exerciseId2...]
 });
 
 // Seed some default exercises if the DB is empty

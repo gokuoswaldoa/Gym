@@ -17,6 +17,7 @@ export const triggerSync = async () => {
       exercises: await db.exercises.toArray(),
       sets: await db.sets.toArray(),
       bodyWeightLogs: await db.bodyWeightLogs.toArray(),
+      plannedRoutines: await db.plannedRoutines.toArray(),
     };
 
     // 2. Subir a Supabase (Upsert para sobreescribir con la versión más reciente)
@@ -59,11 +60,12 @@ export const downloadSync = async () => {
       console.log("Descargando datos de la nube...");
       const cloudData = data.data;
       
-      await db.transaction('rw', db.workouts, db.exercises, db.sets, db.bodyWeightLogs, async () => {
+      await db.transaction('rw', db.workouts, db.exercises, db.sets, db.bodyWeightLogs, db.plannedRoutines, async () => {
         if (cloudData.workouts) { await db.workouts.clear(); await db.workouts.bulkAdd(cloudData.workouts); }
         if (cloudData.exercises) { await db.exercises.clear(); await db.exercises.bulkAdd(cloudData.exercises); }
         if (cloudData.sets) { await db.sets.clear(); await db.sets.bulkAdd(cloudData.sets); }
         if (cloudData.bodyWeightLogs) { await db.bodyWeightLogs.clear(); await db.bodyWeightLogs.bulkAdd(cloudData.bodyWeightLogs); }
+        if (cloudData.plannedRoutines) { await db.plannedRoutines.clear(); await db.plannedRoutines.bulkAdd(cloudData.plannedRoutines); }
       });
       
       localStorage.setItem('lastSync', new Date().toISOString());

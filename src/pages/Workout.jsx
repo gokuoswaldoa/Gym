@@ -32,6 +32,60 @@ export default function Workout() {
   const [restSeconds, setRestSeconds] = useState(0);
   const [isResting, setIsResting] = useState(false);
 
+  // Rutina sugerida del día
+  const [suggestedRoutine, setSuggestedRoutine] = useState(null);
+  
+  useEffect(() => {
+    // Buscar rutina del día si el borrador está vacío
+    if (workoutExercises.length === 0) {
+      const today = new Date().getDay(); // 0-6 (Dom-Sab)
+      db.plannedRoutines.toArray().then(routines => {
+        const todayRoutine = routines.find(r => r.days.includes(today));
+        if (todayRoutine) {
+          setSuggestedRoutine(todayRoutine);
+        }
+      });
+    } else {
+      setSuggestedRoutine(null);
+    }
+  }, [workoutExercises.length]);
+
+  const loadSuggestedRoutine = async () => {
+    if (!suggestedRoutine) return;
+    
+    const exercisesToLoad = [];
+    for (const exId of suggestedRoutine.exercises) {
+      const ex = await db.exercises.get(exId);
+      if (ex) {
+        // Buscar rendimiento anterior
+        const lastSets = await db.sets.where('exerciseId').equals(ex.id).toArray();
+        let previousSetsArray = [];
+        if (lastSets.length > 0) {
+          const workoutIds = [...new Set(lastSets.map(s => s.workoutId))];
+          const workouts = await db.workouts.where('id').anyOf(workoutIds).toArray();
+          workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+          
+          if (workouts.length > 0) {
+            const latestWId = workouts[0].id;
+            previousSetsArray = lastSets.filter(s => s.workoutId === latestWId).sort((a,b) => a.id - b.id);
+          }
+        }
+        
+        exercisesToLoad.push({
+          exerciseId: ex.id,
+          name: ex.name,
+          previousSets: previousSetsArray,
+          sets: previousSetsArray.length > 0 
+                ? previousSetsArray.map(() => ({ reps: '', weight: '', completed: false }))
+                : [{ reps: '', weight: '', completed: false }]
+        });
+      }
+    }
+    
+    setWorkoutExercises(exercisesToLoad);
+    setSuggestedRoutine(null);
+  };
+
   useEffect(() => {
     let interval = null;
     if (isResting) {
@@ -189,6 +243,21 @@ export default function Workout() {
 
       <h2 className="text-3xl font-bebas text-spidey-amber tracking-wide">NUEVA RUTINA</h2>
       
+      {suggestedRoutine && (
+        <div className="bg-spidey-amber/10 border-2 border-spidey-amber rounded-2xl p-5 mb-6">
+          <h3 className="text-xl font-archivo text-spidey-amber uppercase mb-2">¡Toca {suggestedRoutine.name}!</h3>
+          <p className="text-sm font-work text-spidey-gray mb-4">
+            Tienes esta rutina programada para hoy. ¿Quieres cargar los ejercicios automáticamente?
+          </p>
+          <button 
+            onClick={loadSuggestedRoutine}
+            className="w-full bg-spidey-amber text-[#111112] font-archivo font-bold uppercase py-3 rounded-xl hover:bg-yellow-500 transition-colors"
+          >
+            Empezar Rutina de Hoy
+          </button>
+        </div>
+      )}
+
       {/* Selector de Ejercicio */}
       <div className="bg-[#111112] p-5 rounded-2xl shadow-sm border border-spidey-gray/30">
         <div className="flex justify-between items-end mb-2">
