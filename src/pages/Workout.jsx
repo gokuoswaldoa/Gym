@@ -15,7 +15,18 @@ export default function Workout() {
   const [newExCategory, setNewExCategory] = useState('Piernas');
 
   // Estructura: [ { exerciseId, name, previousSets, sets: [ { reps, weight, completed } ] } ]
-  const [workoutExercises, setWorkoutExercises] = useState([]);
+  const [workoutExercises, setWorkoutExercises] = useState(() => {
+    try {
+      const saved = localStorage.getItem('workoutDraft');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('workoutDraft', JSON.stringify(workoutExercises));
+  }, [workoutExercises]);
 
   // Temporizador de Descanso
   const [restSeconds, setRestSeconds] = useState(0);
@@ -154,6 +165,10 @@ export default function Workout() {
       await db.sets.bulkAdd(setsToSave);
     }
     
+    // Limpiar el borrador
+    setWorkoutExercises([]);
+    localStorage.removeItem('workoutDraft');
+
     // Disparar sincronización en segundo plano (si hay internet)
     import('../lib/sync').then(({ triggerSync }) => triggerSync());
     
@@ -270,8 +285,8 @@ export default function Workout() {
                       Anterior: {prev.weight}kg x {prev.reps}
                     </div>
                   )}
-                  <div className={`flex gap-2 items-center p-2 rounded-xl transition-colors ${set.completed ? 'bg-spidey-amber/10 border border-spidey-amber/30' : ''}`}>
-                    <div className="w-8 text-center font-bold text-spidey-white bg-spidey-gray/20 rounded-lg py-2 flex items-center justify-center">
+                  <div className={`flex gap-1 items-center p-1 sm:p-2 rounded-xl transition-colors ${set.completed ? 'bg-spidey-amber/10 border border-spidey-amber/30' : ''}`}>
+                    <div className="w-6 sm:w-8 text-center font-bold text-spidey-white bg-spidey-gray/20 rounded-lg py-2 flex items-center justify-center shrink-0">
                       {setIndex + 1}
                     </div>
                     <input 
@@ -279,22 +294,22 @@ export default function Workout() {
                       placeholder="0"
                       value={set.weight}
                       onChange={(e) => updateSet(exIndex, setIndex, 'weight', e.target.value)}
-                      className="flex-1 bg-spidey-black border border-spidey-gray/50 rounded-xl p-2 text-center text-spidey-white focus:outline-none focus:border-spidey-blue font-work"
+                      className="flex-1 min-w-0 bg-spidey-black border border-spidey-gray/50 rounded-xl p-2 text-center text-spidey-white focus:outline-none focus:border-spidey-blue font-work"
                     />
                     <input 
                       type="number" 
                       placeholder="0"
                       value={set.reps}
                       onChange={(e) => updateSet(exIndex, setIndex, 'reps', e.target.value)}
-                      className="flex-1 bg-spidey-black border border-spidey-gray/50 rounded-xl p-2 text-center text-spidey-white focus:outline-none focus:border-spidey-blue font-work"
+                      className="flex-1 min-w-0 bg-spidey-black border border-spidey-gray/50 rounded-xl p-2 text-center text-spidey-white focus:outline-none focus:border-spidey-blue font-work"
                     />
                     <button 
                       onClick={() => toggleSetCompletion(exIndex, setIndex)}
-                      className={`w-10 flex justify-center items-center h-10 rounded-lg transition-colors ${set.completed ? 'bg-spidey-amber text-[#111112]' : 'bg-spidey-black border border-spidey-gray/50 text-spidey-gray hover:text-spidey-white'}`}
+                      className={`w-8 sm:w-10 flex justify-center items-center h-10 rounded-lg transition-colors shrink-0 ${set.completed ? 'bg-spidey-amber text-[#111112]' : 'bg-spidey-black border border-spidey-gray/50 text-spidey-gray hover:text-spidey-white'}`}
                     >
-                      <CheckCircle size={20} />
+                      <CheckCircle size={18} />
                     </button>
-                    <button onClick={() => removeSet(exIndex, setIndex)} className="w-8 flex justify-center text-spidey-gray hover:text-spidey-red transition-colors">
+                    <button onClick={() => removeSet(exIndex, setIndex)} className="w-6 sm:w-8 flex justify-center text-spidey-gray hover:text-spidey-red transition-colors shrink-0">
                       <Trash2 size={16} />
                     </button>
                   </div>
