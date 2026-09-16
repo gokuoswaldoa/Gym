@@ -32,29 +32,36 @@ export default function Workout() {
   const [restSeconds, setRestSeconds] = useState(0);
   const [isResting, setIsResting] = useState(false);
 
-  // Rutina sugerida del día
-  const [suggestedRoutine, setSuggestedRoutine] = useState(null);
+  // Rutina sugerida del día y selector
+  const [allRoutines, setAllRoutines] = useState([]);
+  const [selectedRoutineId, setSelectedRoutineId] = useState('');
   
   useEffect(() => {
-    // Buscar rutina del día si el borrador está vacío
+    // Buscar todas las rutinas y seleccionar la del día si el borrador está vacío
     if (workoutExercises.length === 0) {
-      const today = new Date().getDay(); // 0-6 (Dom-Sab)
       db.plannedRoutines.toArray().then(routines => {
-        const todayRoutine = routines.find(r => r.days.includes(today));
-        if (todayRoutine) {
-          setSuggestedRoutine(todayRoutine);
+        setAllRoutines(routines);
+        if (routines.length > 0) {
+          const today = new Date().getDay(); // 0-6 (Dom-Sab)
+          const todayRoutine = routines.find(r => r.days.includes(today));
+          if (todayRoutine) {
+            setSelectedRoutineId(todayRoutine.id.toString());
+          } else {
+            setSelectedRoutineId(routines[0].id.toString());
+          }
         }
       });
     } else {
-      setSuggestedRoutine(null);
+      setAllRoutines([]);
     }
   }, [workoutExercises.length]);
 
-  const loadSuggestedRoutine = async () => {
-    if (!suggestedRoutine) return;
+  const loadSuggestedRoutine = async (routineId) => {
+    const routine = allRoutines.find(r => r.id === routineId);
+    if (!routine) return;
     
     const exercisesToLoad = [];
-    for (const exId of suggestedRoutine.exercises) {
+    for (const exId of routine.exercises) {
       const ex = await db.exercises.get(exId);
       if (ex) {
         // Buscar rendimiento anterior
@@ -83,7 +90,7 @@ export default function Workout() {
     }
     
     setWorkoutExercises(exercisesToLoad);
-    setSuggestedRoutine(null);
+    setAllRoutines([]);
   };
 
   useEffect(() => {
@@ -248,17 +255,26 @@ export default function Workout() {
 
       <h2 className="text-3xl font-bebas text-spidey-amber tracking-wide">NUEVA RUTINA</h2>
       
-      {suggestedRoutine && (
+      {allRoutines.length > 0 && workoutExercises.length === 0 && (
         <div className="bg-spidey-amber/10 border-2 border-spidey-amber rounded-2xl p-5 mb-6">
-          <h3 className="text-xl font-archivo text-spidey-amber uppercase mb-2">¡Toca {suggestedRoutine.name}!</h3>
-          <p className="text-sm font-work text-spidey-gray mb-4">
-            Tienes esta rutina programada para hoy. ¿Quieres cargar los ejercicios automáticamente?
+          <h3 className="text-xl font-archivo text-spidey-amber uppercase mb-2">Rutina de Hoy</h3>
+          <p className="text-sm font-work text-spidey-gray mb-3">
+            Selecciona la rutina que harás hoy (se auto-seleccionó la programada).
           </p>
+          <select 
+            className="w-full bg-spidey-black border border-spidey-amber/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-amber font-work mb-4"
+            value={selectedRoutineId}
+            onChange={(e) => setSelectedRoutineId(e.target.value)}
+          >
+            {allRoutines.map(r => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
           <button 
-            onClick={loadSuggestedRoutine}
+            onClick={() => loadSuggestedRoutine(Number(selectedRoutineId))}
             className="w-full bg-spidey-amber text-[#111112] font-archivo font-bold uppercase py-3 rounded-xl hover:bg-yellow-500 transition-colors"
           >
-            Empezar Rutina de Hoy
+            Empezar Rutina
           </button>
         </div>
       )}
