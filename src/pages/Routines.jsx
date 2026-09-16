@@ -75,7 +75,7 @@ export default function Routines() {
         <h2 className="text-3xl font-bebas text-spidey-amber tracking-wide">PLANTILLAS</h2>
         <button 
           onClick={() => setShowForm(!showForm)}
-          className="bg-spidey-amber text-[#111112] px-4 py-2 rounded-xl font-archivo text-sm uppercase font-bold flex items-center gap-2"
+          className="bg-spidey-amber text-[#111112] px-4 py-2 rounded-xl font-archivo text-sm uppercase font-bold flex items-center gap-2 shrink-0"
         >
           {showForm ? 'Cancelar' : <><Plus size={18} /> Nueva</>}
         </button>
@@ -110,7 +110,7 @@ export default function Routines() {
             <label className="block text-xs font-archivo text-spidey-gray uppercase mb-2">Ejercicios</label>
             <div className="flex gap-2 mb-3">
               <select 
-                className="flex-1 bg-spidey-black border border-spidey-gray/50 rounded-xl p-2 text-spidey-white focus:outline-none focus:border-spidey-blue font-work"
+                className="flex-1 min-w-0 bg-spidey-black border border-spidey-gray/50 rounded-xl p-2 text-spidey-white focus:outline-none focus:border-spidey-blue font-work"
                 value={currentExercise}
                 onChange={(e) => setCurrentExercise(e.target.value)}
               >
@@ -121,7 +121,7 @@ export default function Routines() {
               </select>
               <button 
                 onClick={addExercise}
-                className="bg-spidey-gray/20 text-spidey-white p-2 rounded-xl hover:bg-spidey-blue transition-colors"
+                className="bg-spidey-gray/20 text-spidey-white p-2 rounded-xl hover:bg-spidey-blue transition-colors shrink-0"
               >
                 <Plus size={20} />
               </button>
