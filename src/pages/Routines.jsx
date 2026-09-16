@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { db } from '../db/db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Plus, Trash2, CalendarDays } from 'lucide-react';
+import { Plus, Trash2, CalendarDays, Pencil, ArrowUp, ArrowDown } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
   { id: 1, name: 'Lunes' },
@@ -22,6 +22,25 @@ export default function Routines() {
   const [selectedDays, setSelectedDays] = useState([]);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [currentExercise, setCurrentExercise] = useState('');
+  const [editingRoutineId, setEditingRoutineId] = useState(null);
+
+  const resetForm = () => {
+    setShowForm(false);
+    setNewRoutineName('');
+    setSelectedDays([]);
+    setSelectedExercises([]);
+    setCurrentExercise('');
+    setEditingRoutineId(null);
+  };
+
+  const startEdit = (routine) => {
+    setEditingRoutineId(routine.id);
+    setNewRoutineName(routine.name);
+    setSelectedDays([...routine.days]);
+    setSelectedExercises([...routine.exercises]);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const toggleDay = (dayId) => {
     if (selectedDays.includes(dayId)) {
@@ -43,21 +62,43 @@ export default function Routines() {
     setSelectedExercises(updated);
   };
 
+  const moveExerciseUp = (index) => {
+    if (index === 0) return;
+    const updated = [...selectedExercises];
+    const temp = updated[index - 1];
+    updated[index - 1] = updated[index];
+    updated[index] = temp;
+    setSelectedExercises(updated);
+  };
+
+  const moveExerciseDown = (index) => {
+    if (index === selectedExercises.length - 1) return;
+    const updated = [...selectedExercises];
+    const temp = updated[index + 1];
+    updated[index + 1] = updated[index];
+    updated[index] = temp;
+    setSelectedExercises(updated);
+  };
+
   const saveRoutine = async () => {
     if (!newRoutineName || selectedDays.length === 0 || selectedExercises.length === 0) return;
     
-    await db.plannedRoutines.add({
-      name: newRoutineName,
-      days: selectedDays,
-      exercises: selectedExercises
-    });
+    if (editingRoutineId) {
+      await db.plannedRoutines.update(editingRoutineId, {
+        name: newRoutineName,
+        days: selectedDays,
+        exercises: selectedExercises
+      });
+    } else {
+      await db.plannedRoutines.add({
+        name: newRoutineName,
+        days: selectedDays,
+        exercises: selectedExercises
+      });
+    }
     
     import('../lib/sync').then(({ triggerSync }) => triggerSync());
-    
-    setShowForm(false);
-    setNewRoutineName('');
-    setSelectedDays([]);
-    setSelectedExercises([]);
+    resetForm();
   };
 
   const deleteRoutine = async (id) => {
@@ -74,7 +115,7 @@ export default function Routines() {
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bebas text-spidey-amber tracking-wide">PLANTILLAS</h2>
         <button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => showForm ? resetForm() : setShowForm(true)}
           className="bg-spidey-amber text-[#111112] px-4 py-2 rounded-xl font-archivo text-sm uppercase font-bold flex items-center gap-2 shrink-0"
         >
           {showForm ? 'Cancelar' : <><Plus size={18} /> Nueva</>}
@@ -129,11 +170,27 @@ export default function Routines() {
             
             <div className="space-y-2">
               {selectedExercises.map((exId, idx) => (
-                <div key={idx} className="flex justify-between items-center bg-spidey-gray/10 p-2 rounded-lg border border-spidey-gray/20">
-                  <span className="text-sm font-work text-spidey-white">{idx + 1}. {getExerciseName(exId)}</span>
-                  <button onClick={() => removeExercise(idx)} className="text-spidey-red p-1">
-                    <Trash2 size={16} />
-                  </button>
+                <div key={idx} className="flex justify-between items-center bg-spidey-gray/10 p-2 rounded-lg border border-spidey-gray/20 gap-2">
+                  <span className="text-sm font-work text-spidey-white flex-1">{idx + 1}. {getExerciseName(exId)}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button 
+                      onClick={() => moveExerciseUp(idx)} 
+                      disabled={idx === 0}
+                      className={`p-1 rounded transition-colors ${idx === 0 ? 'text-spidey-gray/30' : 'text-spidey-gray hover:text-spidey-white hover:bg-spidey-gray/20'}`}
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button 
+                      onClick={() => moveExerciseDown(idx)} 
+                      disabled={idx === selectedExercises.length - 1}
+                      className={`p-1 rounded transition-colors ${idx === selectedExercises.length - 1 ? 'text-spidey-gray/30' : 'text-spidey-gray hover:text-spidey-white hover:bg-spidey-gray/20'}`}
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                    <button onClick={() => removeExercise(idx)} className="text-spidey-red p-1 hover:bg-red-900/30 rounded transition-colors ml-1">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -158,13 +215,21 @@ export default function Routines() {
 
         {plannedRoutines?.map(routine => (
           <div key={routine.id} className="bg-[#111112] p-4 rounded-2xl shadow-sm border border-spidey-gray/30 relative">
-            <button 
-              onClick={() => deleteRoutine(routine.id)}
-              className="absolute top-4 right-4 text-spidey-gray hover:text-spidey-red transition-colors"
-            >
-              <Trash2 size={18} />
-            </button>
-            <h3 className="text-xl font-archivo text-spidey-white uppercase mb-2">{routine.name}</h3>
+            <div className="absolute top-4 right-4 flex gap-2">
+              <button 
+                onClick={() => startEdit(routine)}
+                className="text-spidey-gray hover:text-spidey-blue transition-colors"
+              >
+                <Pencil size={18} />
+              </button>
+              <button 
+                onClick={() => deleteRoutine(routine.id)}
+                className="text-spidey-gray hover:text-spidey-red transition-colors"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+            <h3 className="text-xl font-archivo text-spidey-white uppercase mb-2 pr-16">{routine.name}</h3>
             
             <div className="flex flex-wrap gap-1 mb-3">
               {routine.days.map(dId => (
