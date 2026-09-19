@@ -1,18 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Utensils, Flame, Beef, Wheat, Droplets, Plus, X, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Flame, Beef, Wheat, Droplets, Plus, X } from 'lucide-react';
 import { db } from '../db/db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { foodDatabase, calcCalories } from '../data/foodDatabase';
+import { calcCalories } from '../data/foodDatabase';
+import MealWizard from '../components/MealWizard';
 
 export default function Nutrition() {
   const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [manualEntry, setManualEntry] = useState({ name: '', calories: '', protein: '', carbs: '', fats: '' });
 
-  // Metas nutricionales del usuario
   const goals = { calories: 2500, protein: 190, carbs: 280, fats: 60 };
-
-  // Cargar registros del día actual
   const todayStr = new Date().toISOString().split('T')[0];
   const logs = useLiveQuery(() => db.nutritionLogs.where({ date: todayStr }).toArray(), [todayStr]);
 
@@ -35,7 +34,6 @@ export default function Nutrition() {
     fats: Math.max(0, goals.fats - consumed.fats)
   };
 
-  // Lógica de Ventanas de Comida
   const currentHour = new Date().getHours();
   let mealType = 'Desayuno';
   let remainingMeals = 4;
@@ -56,66 +54,45 @@ export default function Nutrition() {
     remainingMeals = 1;
   }
 
-  // Targets para la comida actual
   const mealTarget = {
     protein: Math.round(remaining.protein / remainingMeals),
     carbs: Math.round(remaining.carbs / remainingMeals),
     fats: isPreWorkout ? 0 : Math.round(remaining.fats / remainingMeals)
   };
 
-  // Estados del Menú Inteligente
-  const [selectedProteinId, setSelectedProteinId] = useState('');
-  const [selectedCarbId, setSelectedCarbId] = useState('');
-  const [selectedFatId, setSelectedFatId] = useState('');
+  const handleLogSmartMeal = async (cart) => {
+    setIsWizardOpen(false);
+    if (cart.length === 0) return;
 
-  // Cálculos dinámicos
-  const selectedProtein = foodDatabase.find(f => f.id === selectedProteinId);
-  const selectedCarb = foodDatabase.find(f => f.id === selectedCarbId);
-  const selectedFat = foodDatabase.find(f => f.id === selectedFatId);
+    let mealCals = 0;
+    let mealP = 0;
+    let mealC = 0;
+    let mealF = 0;
+    const foodStrings = [];
 
-  // Regla de 3 para calcular gramos en crudo
-  // Si necesito 40g de prote y el alimento tiene 23g por cada 100g -> (40 * 100) / 23 = 174g
-  const calcGrams = (target, foodMacroPer100) => {
-    if (!foodMacroPer100 || target <= 0) return 0;
-    return Math.round((target * 100) / foodMacroPer100);
-  };
+    cart.forEach(item => {
+      const p = item.food.category === 'protein' ? item.providedMacro : 0;
+      const c = item.food.category === 'carbs' ? item.providedMacro : 0;
+      const f = item.food.category === 'fats' ? item.providedMacro : 0;
+      const cals = Math.round((item.grams / 100) * calcCalories(item.food));
 
-  const pGrams = selectedProtein ? calcGrams(mealTarget.protein, selectedProtein.p) : 0;
-  const cGrams = selectedCarb ? calcGrams(mealTarget.carbs, selectedCarb.c) : 0;
-  const fGrams = selectedFat ? calcGrams(mealTarget.fats, selectedFat.f) : 0;
+      mealP += p;
+      mealC += c;
+      mealF += f;
+      mealCals += cals;
+      foodStrings.push(`${item.grams}g ${item.food.name}`);
+    });
 
-  const totalMealCals = Math.round(
-    ((pGrams/100) * (selectedProtein ? calcCalories(selectedProtein) : 0)) +
-    ((cGrams/100) * (selectedCarb ? calcCalories(selectedCarb) : 0)) +
-    ((fGrams/100) * (selectedFat ? calcCalories(selectedFat) : 0))
-  );
-
-  const handleLogSmartMeal = async () => {
-    const mealCals = totalMealCals;
-    const mealP = mealTarget.protein;
-    const mealC = mealTarget.carbs;
-    const mealF = mealTarget.fats;
-
-    if (mealCals > 0) {
-      await db.nutritionLogs.add({
-        date: todayStr,
-        mealType: mealType,
-        calories: mealCals,
-        protein: mealP,
-        carbs: mealC,
-        fats: mealF,
-        foods: [
-          selectedProtein ? `${pGrams}g ${selectedProtein.name}` : null,
-          selectedCarb ? `${cGrams}g ${selectedCarb.name}` : null,
-          selectedFat ? `${fGrams}g ${selectedFat.name}` : null
-        ].filter(Boolean)
-      });
-      import('../lib/sync').then(({ triggerSync }) => triggerSync());
-      
-      setSelectedProteinId('');
-      setSelectedCarbId('');
-      setSelectedFatId('');
-    }
+    await db.nutritionLogs.add({
+      date: todayStr,
+      mealType: mealType,
+      calories: mealCals,
+      protein: Math.round(mealP),
+      carbs: Math.round(mealC),
+      fats: Math.round(mealF),
+      foods: foodStrings
+    });
+    import('../lib/sync').then(({ triggerSync }) => triggerSync());
   };
 
   const handleAddManual = async () => {
@@ -134,11 +111,6 @@ export default function Nutrition() {
   };
 
   const getPercentage = (current, goal) => Math.min(100, Math.round((current / goal) * 100));
-
-  // Filtrado de alimentos según la hora
-  const availableProteins = foodDatabase.filter(f => f.category === 'protein' && (!isPreWorkout || f.digestion !== 'slow'));
-  const availableCarbs = foodDatabase.filter(f => f.category === 'carbs' && (!isPreWorkout || f.digestion !== 'slow'));
-  const availableFats = foodDatabase.filter(f => f.category === 'fats');
 
   return (
     <div className="space-y-6 pb-24 relative min-h-[85vh]">
@@ -214,127 +186,35 @@ export default function Nutrition() {
         </div>
       </div>
 
-      {/* Menú Inteligente */}
-      <div className="bg-[#111112] p-5 rounded-2xl shadow-sm border border-spidey-amber/30 space-y-4">
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="text-xl font-archivo text-spidey-amber uppercase tracking-wide">Arma tu Platillo</h3>
-            <p className="text-sm font-work text-spidey-gray mt-1">Sugerencias para: <strong className="text-spidey-white">{mealType}</strong></p>
-          </div>
-          {isPreWorkout && (
-            <span className="bg-spidey-red/20 text-spidey-red text-[10px] font-archivo uppercase px-2 py-1 rounded-lg border border-spidey-red/30">
-              Digestión Rápida
-            </span>
-          )}
-        </div>
-
-        <div className="space-y-4 mt-4">
-          {/* Selector Proteína */}
-          {remaining.protein > 0 ? (
-            <div className="space-y-1">
-              <label className="text-xs font-archivo text-spidey-blue uppercase flex justify-between">
-                <span>Elige Proteína</span>
-                <span>Meta: {mealTarget.protein}g</span>
-              </label>
-              <select 
-                className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-blue text-sm"
-                value={selectedProteinId}
-                onChange={e => setSelectedProteinId(e.target.value)}
-              >
-                <option value="">Selecciona una proteína...</option>
-                {availableProteins.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-              {selectedProtein && (
-                <p className="text-xs font-work text-spidey-white mt-1">
-                  👉 Pesa <strong className="text-spidey-blue text-base">{pGrams}g</strong> en crudo.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-green-500 bg-green-500/10 p-3 rounded-xl border border-green-500/20">
-              <CheckCircle2 size={18} />
-              <span className="font-archivo text-sm uppercase">¡Proteína Completada!</span>
-            </div>
-          )}
-
-          {/* Selector Carbohidratos */}
-          {remaining.carbs > 0 ? (
-            <div className="space-y-1">
-              <label className="text-xs font-archivo text-spidey-amber uppercase flex justify-between">
-                <span>Elige Carbohidrato</span>
-                <span>Meta: {mealTarget.carbs}g</span>
-              </label>
-              <select 
-                className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-amber text-sm"
-                value={selectedCarbId}
-                onChange={e => setSelectedCarbId(e.target.value)}
-              >
-                <option value="">Selecciona un carbohidrato...</option>
-                {availableCarbs.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-              {selectedCarb && (
-                <p className="text-xs font-work text-spidey-white mt-1">
-                  👉 Pesa <strong className="text-spidey-amber text-base">{cGrams}g</strong> en crudo.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-green-500 bg-green-500/10 p-3 rounded-xl border border-green-500/20">
-              <CheckCircle2 size={18} />
-              <span className="font-archivo text-sm uppercase">¡Carbos Completados!</span>
-            </div>
-          )}
-
-          {/* Selector Grasas */}
-          {remaining.fats > 0 ? (
-            isPreWorkout ? (
-              <div className="p-3 bg-spidey-gray/10 rounded-xl border border-spidey-gray/20">
-                <p className="text-xs font-work text-spidey-gray text-center">Evita grasas antes de entrenar para una digestión rápida. Las guardaremos para la cena.</p>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <label className="text-xs font-archivo text-spidey-gray uppercase flex justify-between">
-                  <span>Elige Grasa</span>
-                  <span>Meta: {mealTarget.fats}g</span>
-                </label>
-                <select 
-                  className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-gray text-sm"
-                  value={selectedFatId}
-                  onChange={e => setSelectedFatId(e.target.value)}
-                >
-                  <option value="">Selecciona una grasa...</option>
-                  {availableFats.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
-                {selectedFat && (
-                  <p className="text-xs font-work text-spidey-white mt-1">
-                    👉 Pesa <strong className="text-spidey-gray text-base">{fGrams}g</strong> en crudo.
-                  </p>
-                )}
-              </div>
-            )
-          ) : (
-            <div className="flex items-center gap-2 text-green-500 bg-green-500/10 p-3 rounded-xl border border-green-500/20">
-              <CheckCircle2 size={18} />
-              <span className="font-archivo text-sm uppercase">¡Grasas Completadas!</span>
-            </div>
-          )}
-        </div>
-
+      {/* Botón Lanzar Wizard */}
+      <div className="bg-[#111112] p-6 rounded-3xl shadow-sm border border-spidey-amber/30 space-y-4 flex flex-col items-center text-center">
+        <h3 className="text-2xl font-bebas text-spidey-amber tracking-wide">ARMA TU PLATILLO</h3>
+        <p className="text-sm font-work text-spidey-gray">
+          Asistente inteligente para calcular tus gramos de comida según la hora del día y lo que te falta por consumir.
+        </p>
         <button 
-          onClick={handleLogSmartMeal}
-          disabled={!selectedProteinId && !selectedCarbId && !selectedFatId}
-          className="w-full bg-spidey-amber text-[#111112] font-archivo font-bold uppercase py-4 rounded-xl hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+          onClick={() => setIsWizardOpen(true)}
+          className="w-full bg-spidey-amber text-[#111112] font-archivo font-bold uppercase py-4 rounded-xl hover:bg-yellow-500 transition-transform active:scale-95 shadow-[0_4px_20px_rgba(242,169,0,0.3)] mt-2"
         >
-          Registrar {totalMealCals > 0 ? `(~${totalMealCals} kcal)` : ''}
+          ✨ Iniciar Creador
         </button>
       </div>
+
+      <MealWizard 
+        isOpen={isWizardOpen} 
+        onClose={() => setIsWizardOpen(false)} 
+        mealTarget={mealTarget} 
+        isPreWorkout={isPreWorkout} 
+        mealType={mealType} 
+        onLogMeal={handleLogSmartMeal} 
+      />
 
       {/* FAB - Agregar Manual */}
       <button 
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-spidey-amber text-[#111112] rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(242,169,0,0.4)] hover:bg-yellow-500 transition-transform active:scale-95 z-40"
+        className="fixed bottom-24 right-6 w-14 h-14 bg-spidey-gray/20 border border-spidey-gray/30 text-spidey-white rounded-full flex items-center justify-center backdrop-blur-sm hover:bg-spidey-gray/30 transition-transform active:scale-95 z-40"
       >
-        <Plus size={28} />
+        <Plus size={24} />
       </button>
 
       {/* Modal - Ingreso Manual */}
@@ -348,7 +228,7 @@ export default function Nutrition() {
               <X size={24} />
             </button>
             
-            <h3 className="text-2xl font-bebas text-spidey-white tracking-wide mb-6">Agregar Alimento</h3>
+            <h3 className="text-2xl font-bebas text-spidey-white tracking-wide mb-6">Agregar Alimento Manual</h3>
             
             <div className="space-y-4">
               <div>
@@ -407,7 +287,7 @@ export default function Nutrition() {
               
               <button 
                 onClick={handleAddManual}
-                className="w-full bg-spidey-amber text-[#111112] font-archivo font-bold uppercase py-4 rounded-xl mt-4 hover:bg-yellow-500 transition-colors"
+                className="w-full bg-spidey-gray/20 text-spidey-white font-archivo font-bold uppercase py-4 rounded-xl mt-4 hover:bg-spidey-gray/30 transition-colors"
               >
                 Añadir al registro
               </button>
