@@ -7,6 +7,7 @@ import History from './pages/History';
 import Progress from './pages/Progress';
 import Routines from './pages/Routines';
 import Nutrition from './pages/Nutrition';
+import Exercises from './pages/Exercises';
 import { triggerSync, downloadSync } from './lib/sync';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="routines" element={<Routines />} />
           <Route path="workout" element={<Workout />} />
+          <Route path="exercises" element={<Exercises />} />
           <Route path="nutrition" element={<Nutrition />} />
           <Route path="history" element={<History />} />
           <Route path="progress" element={<Progress />} />
