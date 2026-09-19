@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { Home, Dumbbell, Clock, TrendingUp, CalendarDays } from 'lucide-react';
+import { Home, Dumbbell, Clock, TrendingUp, CalendarDays, Apple } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -12,6 +12,7 @@ export default function Layout() {
     { to: '/', icon: Home, label: 'Inicio' },
     { to: '/routines', icon: CalendarDays, label: 'Rutinas' },
     { to: '/workout', icon: Dumbbell, label: 'Rutina' },
+    { to: '/nutrition', icon: Apple, label: 'Dieta' },
     { to: '/history', icon: Clock, label: 'Historial' },
     { to: '/progress', icon: TrendingUp, label: 'Progreso' },
   ];
