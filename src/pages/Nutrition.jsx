@@ -295,6 +295,27 @@ export default function Nutrition() {
           </div>
         </div>
       )}
+
+      {/* Botón Secreto para Resetear (Testing) */}
+      <div className="flex justify-center mt-12 mb-8">
+        <button 
+          onClick={async () => {
+            const pwd = prompt('Contraseña de administrador:');
+            if (pwd === '123') {
+              const todayStr = new Date().toISOString().split('T')[0];
+              await db.nutritionLogs.where({ date: todayStr }).delete();
+              import('../lib/sync').then(({ triggerSync }) => triggerSync());
+              alert('Macros de hoy borrados.');
+            } else {
+              alert('Contraseña incorrecta');
+            }
+          }}
+          className="text-[10px] text-spidey-gray/30 hover:text-spidey-red/50 uppercase font-archivo"
+        >
+          Reset
+        </button>
+      </div>
+
     </div>
   );
 }
