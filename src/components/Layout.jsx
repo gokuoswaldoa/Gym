@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Home, Dumbbell, Clock, TrendingUp, CalendarDays, List } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -8,6 +8,9 @@ function cn(...inputs) {
 }
 
 export default function Layout() {
+  const location = useLocation();
+  const isTrainingModule = !['/', '/nutrition'].includes(location.pathname);
+
   const navItems = [
     { to: '/', icon: Home, label: 'Inicio' },
     { to: '/routines', icon: CalendarDays, label: 'Rutinas' },
@@ -20,17 +23,20 @@ export default function Layout() {
   return (
     <div className="flex flex-col min-h-screen bg-spidey-black text-spidey-white font-work">
       {/* Header */}
-      <header className="bg-[#111112] p-4 shadow-md sticky top-0 z-10 border-b border-spidey-gray/30">
-        <h1 className="text-3xl font-anton text-center text-spidey-red tracking-wide">GYM TRACKER</h1>
-      </header>
+      {isTrainingModule && (
+        <header className="bg-[#111112] p-4 shadow-md sticky top-0 z-10 border-b border-spidey-gray/30">
+          <h1 className="text-3xl font-anton text-center text-spidey-red tracking-wide">GYM TRACKER</h1>
+        </header>
+      )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 pb-20">
+      <main className={`flex-1 overflow-y-auto p-4 ${isTrainingModule ? 'pb-20' : 'pb-4'}`}>
         <Outlet />
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bg-[#111112] border-t border-spidey-gray/30 fixed bottom-0 w-full z-10 pb-safe">
+      {isTrainingModule && (
+        <nav className="bg-[#111112] border-t border-spidey-gray/30 fixed bottom-0 w-full z-10 pb-safe">
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => (
             <NavLink
@@ -49,6 +55,7 @@ export default function Layout() {
           ))}
         </div>
       </nav>
+      )}
     </div>
   );
 }

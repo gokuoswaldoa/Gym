@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Flame, Beef, Wheat, Droplets, Plus, X } from 'lucide-react';
+import { Flame, Beef, Wheat, Droplets, Plus, X, ArrowLeft } from 'lucide-react';
 import { db } from '../db/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { calcCalories } from '../data/foodDatabase';
 import MealWizard from '../components/MealWizard';
+import { useNavigate } from 'react-router-dom';
 
 export default function Nutrition() {
+  const navigate = useNavigate();
   const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -115,7 +117,15 @@ export default function Nutrition() {
   return (
     <div className="space-y-6 pb-24 relative min-h-[85vh]">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-3xl font-bebas text-spidey-amber tracking-wide">NUTRICIÓN</h2>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/')}
+            className="p-2 bg-spidey-gray/10 hover:bg-spidey-gray/20 rounded-full text-spidey-gray transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h2 className="text-3xl font-bebas text-spidey-amber tracking-wide mt-1">NUTRICIÓN</h2>
+        </div>
       </div>
 
       {/* Panel Superior: Barras de Progreso */}
