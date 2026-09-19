@@ -59,12 +59,15 @@ export default function MealWizard({ isOpen, onClose, mealTarget, isPreWorkout, 
   };
 
   const handleUpdateGrams = (id, newGrams) => {
-    const numGrams = Number(newGrams) || 0;
+    // Permitir string vacío para que el usuario pueda borrar todo el número
+    const val = newGrams === '' ? '' : Number(newGrams);
+    
     setCart(cart.map(item => {
       if (item.id === id) {
         const macroPer100 = currentCategory === 'protein' ? item.food.p : currentCategory === 'carbs' ? item.food.c : item.food.f;
-        const newProvided = (numGrams / 100) * macroPer100;
-        return { ...item, grams: numGrams, providedMacro: newProvided };
+        const numForMath = val === '' ? 0 : val;
+        const newProvided = (numForMath / 100) * macroPer100;
+        return { ...item, grams: val, providedMacro: newProvided };
       }
       return item;
     }));
@@ -194,22 +197,29 @@ export default function MealWizard({ isOpen, onClose, mealTarget, isPreWorkout, 
       </div>
 
       {/* Footer Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-5 bg-[#111112] border-t border-spidey-gray/20 flex gap-3">
-        {step > 0 && (
-          <button 
-            onClick={() => setStep(step - 1)}
-            className="px-4 py-4 bg-spidey-gray/10 text-spidey-white rounded-xl flex items-center justify-center hover:bg-spidey-gray/20 transition-colors"
-          >
-            <ChevronLeft size={24} />
-          </button>
+      <div className="absolute bottom-0 left-0 right-0 p-5 bg-[#111112] border-t border-spidey-gray/20 flex flex-col gap-3">
+        {isPreWorkout && step === 1 && (
+          <div className="bg-spidey-red/10 border border-spidey-red/20 p-2 rounded-lg text-center">
+            <p className="text-xs font-work text-spidey-red">⚡ Pre-Entreno: Las grasas se saltarán para digestión rápida.</p>
+          </div>
         )}
-        <button 
-          onClick={nextStep}
-          className="flex-1 bg-spidey-amber text-[#111112] font-archivo font-bold uppercase py-4 rounded-xl flex justify-center items-center gap-2 hover:bg-yellow-500 transition-transform active:scale-95"
-        >
-          {step === 2 || (isPreWorkout && step === 1) ? 'Finalizar' : 'Siguiente'}
-          {step === 2 || (isPreWorkout && step === 1) ? <CheckCircle2 size={20} /> : <ChevronRight size={20} />}
-        </button>
+        <div className="flex gap-3">
+          {step > 0 && (
+            <button 
+              onClick={() => setStep(step - 1)}
+              className="px-4 py-4 bg-spidey-gray/10 text-spidey-white rounded-xl flex items-center justify-center hover:bg-spidey-gray/20 transition-colors"
+            >
+              <ChevronLeft size={24} />
+            </button>
+          )}
+          <button 
+            onClick={nextStep}
+            className="flex-1 bg-spidey-amber text-[#111112] font-archivo font-bold uppercase py-4 rounded-xl flex justify-center items-center gap-2 hover:bg-yellow-500 transition-transform active:scale-95"
+          >
+            {step === 2 || (isPreWorkout && step === 1) ? 'Finalizar y Guardar' : 'Siguiente'}
+            {step === 2 || (isPreWorkout && step === 1) ? <CheckCircle2 size={20} /> : <ChevronRight size={20} />}
+          </button>
+        </div>
       </div>
     </div>
   );
