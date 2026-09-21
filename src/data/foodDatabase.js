@@ -8,6 +8,7 @@ export const foodDatabase = [
   { id: 'p3', name: 'Claras de Huevo (Líquidas)', category: 'protein', p: 11, c: 0.7, f: 0.2, digestion: 'fast' },
   { id: 'p4', name: 'Huevo Entero (1 pieza ~50g)', category: 'protein', p: 13, c: 1, f: 11, digestion: 'medium' },
   { id: 'p4b', name: 'Huevo Duro (1 pieza ~50g)', category: 'protein', p: 13, c: 1, f: 11, digestion: 'medium' },
+  { id: 'p4c', name: 'Huevo Duro (Solo Claras / Sin Yema)', category: 'protein', p: 11, c: 0.7, f: 0.2, digestion: 'fast' },
   { id: 'p5', name: 'Queso Panela', category: 'protein', p: 18, c: 2, f: 14, digestion: 'medium' },
   { id: 'p6', name: 'Queso Cottage (Bajo en grasa)', category: 'protein', p: 11, c: 3, f: 1, digestion: 'slow' },
   { id: 'p7', name: 'Lomo de Cerdo (Magro)', category: 'protein', p: 21, c: 0, f: 4, digestion: 'medium' },
@@ -17,13 +18,13 @@ export const foodDatabase = [
   { id: 'p12', name: 'Pavo (Molida magra)', category: 'protein', p: 20, c: 0, f: 7, digestion: 'medium' },
   { id: 'p13', name: 'Salmón (Fresco)', category: 'protein', p: 20, c: 0, f: 13, digestion: 'medium' },
   { id: 'p14', name: 'Camarones (Crudos)', category: 'protein', p: 24, c: 0, f: 0.3, digestion: 'fast' },
-  { id: 'p15', name: 'Pescado Tilapia/Blanco', category: 'protein', p: 26, c: 0, f: 3, digestion: 'fast' },
+  { id: 'p15', name: 'Pescado Tilapia/Blanco (Crudo)', category: 'protein', p: 21, c: 0, f: 3, digestion: 'fast' },
   { id: 'p16', name: 'Tofu (Firme)', category: 'protein', p: 16, c: 2, f: 9, digestion: 'medium' },
   { id: 'p17', name: 'Leche Descremada', category: 'protein', p: 3.4, c: 5, f: 0.1, digestion: 'fast' },
   { id: 'p18', name: 'Leche Entera', category: 'protein', p: 3.2, c: 4.8, f: 3.25, digestion: 'medium' },
   { id: 'p19', name: 'Queso Oaxaca (Deshebrado)', category: 'protein', p: 24, c: 1, f: 22, digestion: 'slow' },
   { id: 'p20', name: 'Carne Molida de Res (90/10)', category: 'protein', p: 20, c: 0, f: 10, digestion: 'slow' },
-  { id: 'p21', name: 'Bistec de Res', category: 'protein', p: 26, c: 0, f: 15, digestion: 'slow' },
+  { id: 'p21', name: 'Bistec de Res (Crudo)', category: 'protein', p: 22, c: 0, f: 15, digestion: 'slow' },
 
   // ================= CARBOHIDRATOS =================
   { id: 'c1', name: 'Avena (Hojuelas crudas)', category: 'carbs', p: 13, c: 68, f: 7, digestion: 'slow' },
