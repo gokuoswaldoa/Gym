@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, ArrowRight, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { foodDatabase, calcCalories } from '../data/foodDatabase';
 
 export default function MealWizard({ isOpen, onClose, mealTarget, isPreWorkout, mealType, onLogMeal }) {
   const [step, setStep] = useState(0); // 0: protein, 1: carbs, 2: fats
   const [cart, setCart] = useState([]); // [{ food, grams, providedMacro }]
+
+  // Limpiar el carrito cada vez que se abre el wizard
+  useEffect(() => {
+    if (isOpen) {
+      setStep(0);
+      setCart([]);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

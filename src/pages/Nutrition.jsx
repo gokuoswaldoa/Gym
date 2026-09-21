@@ -138,6 +138,44 @@ export default function Nutrition() {
         </div>
       </div>
 
+      {/* Historial de Comidas de Hoy */}
+      <div className="bg-[#111112] rounded-2xl p-5 border border-spidey-gray/30 shadow-sm mt-6">
+        <h3 className="font-bebas text-xl text-spidey-white tracking-wide mb-4">Comidas de Hoy</h3>
+        {(!logs || logs.length === 0) ? (
+          <p className="text-sm font-work text-spidey-gray text-center py-4">Aún no has registrado alimentos hoy.</p>
+        ) : (
+          <div className="space-y-4">
+            {logs.map((log) => (
+              <div key={log.id} className="flex items-center justify-between bg-spidey-gray/5 border border-spidey-gray/20 p-4 rounded-xl">
+                <div>
+                  <h4 className="font-archivo text-spidey-amber text-sm uppercase mb-1">{log.mealType}</h4>
+                  <ul className="text-xs font-work text-spidey-gray mb-2">
+                    {log.foods?.map((f, i) => <li key={i}>• {f}</li>)}
+                  </ul>
+                  <div className="flex gap-3 text-[10px] font-archivo uppercase font-bold text-spidey-white/70">
+                    <span>{log.calories} kcal</span>
+                    <span className="text-blue-400">P: {log.protein}g</span>
+                    <span className="text-green-400">C: {log.carbs}g</span>
+                    <span className="text-yellow-400">G: {log.fats}g</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={async () => {
+                    if (window.confirm('¿Eliminar esta comida?')) {
+                      await db.nutritionLogs.delete(log.id);
+                      import('../lib/sync').then(({ triggerSync }) => triggerSync());
+                    }
+                  }}
+                  className="p-3 text-spidey-red hover:bg-spidey-red/10 rounded-lg transition-colors shrink-0"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Panel Superior: Barras de Progreso */}
       <div className="bg-[#111112] p-5 rounded-2xl shadow-sm border border-spidey-gray/30 space-y-5">
         
