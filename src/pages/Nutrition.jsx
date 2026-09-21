@@ -14,7 +14,17 @@ export default function Nutrition() {
   const [manualEntry, setManualEntry] = useState({ name: '', calories: '', protein: '', carbs: '', fats: '' });
 
   const goals = { calories: 2500, protein: 190, carbs: 280, fats: 60 };
-  const todayStr = new Date().toISOString().split('T')[0];
+  
+  // Usar la fecha local del usuario para evitar bugs de zona horaria
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const todayStr = getLocalDateString();
+  
   const logs = useLiveQuery(() => db.nutritionLogs.where({ date: todayStr }).toArray(), [todayStr]);
 
   useEffect(() => {
@@ -312,7 +322,8 @@ export default function Nutrition() {
           onClick={async () => {
             const pwd = prompt('Contraseña de administrador:');
             if (pwd === '123') {
-              const todayStr = new Date().toISOString().split('T')[0];
+              const d = new Date();
+              const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
               await db.nutritionLogs.where({ date: todayStr }).delete();
               import('../lib/sync').then(({ triggerSync }) => triggerSync());
               alert('Macros de hoy borrados.');
