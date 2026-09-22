@@ -278,16 +278,52 @@ export default function Nutrition() {
       <ChefModal
         isOpen={isChefModalOpen}
         onClose={() => setIsChefModalOpen(false)}
+        remaining={remaining}
+        remainingMeals={remainingMeals}
         mealTarget={{
-          // Si quedan comidas, usa mealTarget, si es la ultima comida del dia, usa el total de lo que falta (remaining)
           protein: remainingMeals === 1 ? remaining.protein : mealTarget.protein,
           carbs: remainingMeals === 1 ? remaining.carbs : mealTarget.carbs,
           fats: remainingMeals === 1 ? remaining.fats : mealTarget.fats
         }}
         mealType={mealType}
-        onLogMeal={(cart) => {
+        onLogMeal={(cartOrPlan, isFullDay) => {
           setIsChefModalOpen(false);
-          handleLogSmartMeal(cart);
+          if (isFullDay) {
+            // cartOrPlan es un array de carritos (uno por comida)
+            cartOrPlan.forEach(planMeal => {
+              // Reutilizamos la logica de handleLogSmartMeal pero adaptada
+              // ya que handleLogSmartMeal maneja 1 solo cart y usa el mealType global.
+            });
+          } else {
+            handleLogSmartMeal(cartOrPlan);
+          }
+        }}
+        onLogMultipleMeals={async (mealsArray) => {
+          setIsChefModalOpen(false);
+          // mealsArray = [{ mealType: 'Desayuno', cart: [...] }, ...]
+          for (const meal of mealsArray) {
+            let mealCals = 0, mealP = 0, mealC = 0, mealF = 0;
+            const foodStrings = [];
+            meal.cart.forEach(item => {
+              const p = item.food.category === 'protein' ? item.providedMacro : 0;
+              const c = item.food.category === 'carbs' ? item.providedMacro : 0;
+              const f = item.food.category === 'fats' ? item.providedMacro : 0;
+              const cals = Math.round((item.grams / 100) * calcCalories(item.food));
+              mealP += p; mealC += c; mealF += f; mealCals += cals;
+              foodStrings.push(`${item.grams}g ${item.food.name}`);
+            });
+
+            await db.nutritionLogs.add({
+              date: todayStr,
+              mealType: meal.mealType,
+              calories: mealCals,
+              protein: Math.round(mealP),
+              carbs: Math.round(mealC),
+              fats: Math.round(mealF),
+              foods: foodStrings
+            });
+          }
+          import('../lib/sync').then(({ triggerSync }) => triggerSync());
         }}
       />
 
