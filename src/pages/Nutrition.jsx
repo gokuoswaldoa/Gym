@@ -4,6 +4,7 @@ import { db } from '../db/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { calcCalories } from '../data/foodDatabase';
 import MealWizard from '../components/MealWizard';
+import ChefModal from '../components/ChefModal';
 import { useNavigate } from 'react-router-dom';
 
 export default function Nutrition() {
@@ -11,6 +12,7 @@ export default function Nutrition() {
   const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isChefModalOpen, setIsChefModalOpen] = useState(false);
   const [manualEntry, setManualEntry] = useState({ name: '', calories: '', protein: '', carbs: '', fats: '' });
 
   const goals = { calories: 2500, protein: 190, carbs: 280, fats: 60 };
@@ -256,6 +258,12 @@ export default function Nutrition() {
         >
           ✨ Iniciar Creador
         </button>
+        <button 
+          onClick={() => setIsChefModalOpen(true)}
+          className="w-full bg-transparent border-2 border-spidey-blue text-spidey-blue font-archivo font-bold uppercase py-4 rounded-xl hover:bg-spidey-blue/10 transition-transform active:scale-95 flex items-center justify-center gap-2"
+        >
+          👨‍🍳 Sugerencia del Chef
+        </button>
       </div>
 
       <MealWizard 
@@ -265,6 +273,22 @@ export default function Nutrition() {
         isPreWorkout={isPreWorkout} 
         mealType={mealType} 
         onLogMeal={handleLogSmartMeal} 
+      />
+
+      <ChefModal
+        isOpen={isChefModalOpen}
+        onClose={() => setIsChefModalOpen(false)}
+        mealTarget={{
+          // Si quedan comidas, usa mealTarget, si es la ultima comida del dia, usa el total de lo que falta (remaining)
+          protein: remainingMeals === 1 ? remaining.protein : mealTarget.protein,
+          carbs: remainingMeals === 1 ? remaining.carbs : mealTarget.carbs,
+          fats: remainingMeals === 1 ? remaining.fats : mealTarget.fats
+        }}
+        mealType={mealType}
+        onLogMeal={(cart) => {
+          setIsChefModalOpen(false);
+          handleLogSmartMeal(cart);
+        }}
       />
 
       {/* FAB - Agregar Manual */}
