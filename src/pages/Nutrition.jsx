@@ -13,7 +13,8 @@ export default function Nutrition() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isChefModalOpen, setIsChefModalOpen] = useState(false);
-  const [manualEntry, setManualEntry] = useState({ name: '', calories: '', protein: '', carbs: '', fats: '' });
+  const [isCustomFoodModalOpen, setIsCustomFoodModalOpen] = useState(false);
+  const [manualEntry, setManualEntry] = useState({ name: '', calories: '', protein: '', carbs: '', fats: '', category: 'protein' });
 
   const goals = { calories: 2500, protein: 190, carbs: 280, fats: 60 };
   
@@ -264,7 +265,116 @@ export default function Nutrition() {
         >
           👨‍🍳 Sugerencia del Chef
         </button>
+        <button 
+          onClick={() => setIsCustomFoodModalOpen(true)}
+          className="w-full bg-transparent border-2 border-spidey-gray text-spidey-gray font-archivo font-bold uppercase py-4 rounded-xl hover:bg-spidey-gray/10 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-2"
+        >
+          📸 Nuevo Alimento / Etiqueta
+        </button>
       </div>
+
+      {/* Modal - Nuevo Alimento Personalizado */}
+      {isCustomFoodModalOpen && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-[#111112] w-full max-w-md border border-spidey-blue/30 rounded-3xl p-6 relative animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:zoom-in-95">
+            <button 
+              onClick={() => setIsCustomFoodModalOpen(false)}
+              className="absolute top-5 right-5 text-spidey-gray hover:text-spidey-white"
+            >
+              <X size={24} />
+            </button>
+            
+            <h3 className="text-2xl font-bebas text-spidey-blue tracking-wide mb-2">Crear Alimento</h3>
+            <p className="text-xs font-work text-spidey-gray mb-6">Agrega un producto de marca o receta con sus valores por cada 100g (o 100ml).</p>
+            
+            <div className="bg-spidey-blue/10 border border-spidey-blue/20 p-3 rounded-xl mb-6">
+              <p className="text-xs font-work text-spidey-blue leading-relaxed">
+                <strong>🤖 Cámara Inteligente:</strong> Si tienes el producto a la mano, <strong>tómale una foto a la tabla nutrimental y envíamela al chat</strong>. Yo soy tu asistente de IA, leeré los datos por ti y te diré qué valores poner aquí, o los guardaré directamente.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-archivo text-spidey-white uppercase mb-1">Nombre y Marca</label>
+                <input 
+                  type="text" 
+                  value={manualEntry.name}
+                  onChange={e => setManualEntry({...manualEntry, name: e.target.value})}
+                  className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-blue"
+                  placeholder="Ej. Leche Lala Light"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-archivo text-spidey-white uppercase mb-1">Categoría Principal</label>
+                <select
+                  value={manualEntry.category || 'protein'}
+                  onChange={e => setManualEntry({...manualEntry, category: e.target.value})}
+                  className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-blue"
+                >
+                  <option value="protein">Proteína (Lácteos, carnes, polvos)</option>
+                  <option value="carbs">Carbohidrato (Pan, pastas, frutas)</option>
+                  <option value="fats">Grasa (Aceites, nueces, aderezos)</option>
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-archivo text-spidey-blue uppercase mb-1">Prot. (g)</label>
+                  <input 
+                    type="number" 
+                    value={manualEntry.protein}
+                    onChange={e => setManualEntry({...manualEntry, protein: e.target.value})}
+                    className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-blue"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-archivo text-spidey-amber uppercase mb-1">Carb. (g)</label>
+                  <input 
+                    type="number" 
+                    value={manualEntry.carbs}
+                    onChange={e => setManualEntry({...manualEntry, carbs: e.target.value})}
+                    className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-amber"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-archivo text-spidey-gray uppercase mb-1">Grasa (g)</label>
+                  <input 
+                    type="number" 
+                    value={manualEntry.fats}
+                    onChange={e => setManualEntry({...manualEntry, fats: e.target.value})}
+                    className="w-full bg-spidey-black border border-spidey-gray/50 rounded-xl p-3 text-spidey-white focus:outline-none focus:border-spidey-gray"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              
+              <button 
+                onClick={async () => {
+                  if (!manualEntry.name) return alert('Ponle un nombre al alimento');
+                  await db.customFoods.add({
+                    name: manualEntry.name,
+                    category: manualEntry.category || 'protein',
+                    p: Number(manualEntry.protein) || 0,
+                    c: Number(manualEntry.carbs) || 0,
+                    f: Number(manualEntry.fats) || 0,
+                    digestion: 'medium'
+                  });
+                  import('../lib/sync').then(({ triggerSync }) => triggerSync());
+                  setIsCustomFoodModalOpen(false);
+                  setManualEntry({ name: '', calories: '', protein: '', carbs: '', fats: '', category: 'protein' });
+                  alert('¡Alimento guardado! Ya puedes usarlo en el Creador de Platillos o el Chef.');
+                }}
+                className="w-full bg-spidey-blue text-white font-archivo font-bold uppercase py-4 rounded-xl mt-4 hover:bg-blue-600 transition-colors"
+              >
+                Guardar Alimento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <MealWizard 
         isOpen={isWizardOpen} 

@@ -24,8 +24,8 @@ export const foodDatabase = [
   { id: 'p15', name: 'Pescado Tilapia/Blanco (Crudo)', category: 'protein', p: 21, c: 0, f: 3, digestion: 'fast' },
   { id: 'p15b', name: 'Pescado Basa (Crudo)', category: 'protein', p: 14, c: 0, f: 4, digestion: 'fast' },
   { id: 'p16', name: 'Tofu (Firme)', category: 'protein', p: 16, c: 2, f: 9, digestion: 'medium' },
-  { id: 'p17', name: 'Leche Descremada', category: 'protein', p: 3.4, c: 5, f: 0.1, digestion: 'fast' },
-  { id: 'p18', name: 'Leche Entera', category: 'protein', p: 3.2, c: 4.8, f: 3.25, digestion: 'medium' },
+  { id: 'p17', name: 'Leche Descremada (ml = g)', category: 'protein', p: 3.4, c: 5, f: 0.1, digestion: 'fast' },
+  { id: 'p18', name: 'Leche Entera (ml = g)', category: 'protein', p: 3.2, c: 4.8, f: 3.25, digestion: 'medium' },
   { id: 'p19', name: 'Queso Oaxaca (Deshebrado)', category: 'protein', p: 24, c: 1, f: 22, digestion: 'slow' },
   { id: 'p19b', name: 'Queso Mozzarella', category: 'protein', p: 22, c: 2, f: 22, digestion: 'slow' },
   { id: 'p20', name: 'Carne Molida de Res (90/10)', category: 'protein', p: 20, c: 0, f: 10, digestion: 'slow' },
@@ -34,6 +34,7 @@ export const foodDatabase = [
   // ================= CARBOHIDRATOS =================
   { id: 'c1', name: 'Avena (Hojuelas crudas)', category: 'carbs', p: 13, c: 68, f: 7, digestion: 'slow' },
   { id: 'c2', name: 'Arroz Blanco (Crudo)', category: 'carbs', p: 7, c: 80, f: 0.6, digestion: 'fast' },
+  { id: 'c2b', name: 'Arroz Blanco (Cocido)', category: 'carbs', p: 2.7, c: 28, f: 0.3, digestion: 'fast' },
   { id: 'c3', name: 'Arroz Integral (Crudo)', category: 'carbs', p: 7.5, c: 76, f: 2.7, digestion: 'slow' },
   { id: 'c4', name: 'Papa Blanca (Cruda)', category: 'carbs', p: 2, c: 17, f: 0.1, digestion: 'fast' },
   { id: 'c5', name: 'Camote (Crudo)', category: 'carbs', p: 1.6, c: 20, f: 0.1, digestion: 'medium' },

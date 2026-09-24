@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
 import { X, RefreshCw, Plus, Flame, Beef, Wheat, Droplets, Check, Calendar } from 'lucide-react';
 import { foodDatabase, calcCalories } from '../data/foodDatabase';
+import { db } from '../db/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 export default function ChefModal({ isOpen, onClose, mealTarget, mealType, remaining, remainingMeals, onLogMeal, onLogMultipleMeals }) {
   const [suggestion, setSuggestion] = useState(null);
   const [fullDayPlan, setFullDayPlan] = useState(null);
   const [mode, setMode] = useState('single'); // 'single' o 'fullday'
 
+  const customFoods = useLiveQuery(() => db.customFoods.toArray()) || [];
+  const combinedDatabase = [...foodDatabase, ...customFoods];
+
   const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const generateSingleMealCart = (targetP, targetC, targetF, skipFats = false) => {
-    const proteins = foodDatabase.filter(f => f.category === 'protein' && (!skipFats || f.digestion !== 'slow'));
-    const carbs = foodDatabase.filter(f => f.category === 'carbs' && (!skipFats || f.digestion !== 'slow'));
-    const fats = foodDatabase.filter(f => f.category === 'fats');
+    const proteins = combinedDatabase.filter(f => f.category === 'protein' && (!skipFats || f.digestion !== 'slow'));
+    const carbs = combinedDatabase.filter(f => f.category === 'carbs' && (!skipFats || f.digestion !== 'slow'));
+    const fats = combinedDatabase.filter(f => f.category === 'fats');
 
     let cart = [];
 

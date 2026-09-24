@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { X, ArrowRight, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { foodDatabase, calcCalories } from '../data/foodDatabase';
+import { db } from '../db/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 export default function MealWizard({ isOpen, onClose, mealTarget, isPreWorkout, mealType, onLogMeal }) {
   const [step, setStep] = useState(0); // 0: protein, 1: carbs, 2: fats
   const [cart, setCart] = useState([]); // [{ food, grams, providedMacro }]
+  
+  const customFoods = useLiveQuery(() => db.customFoods.toArray()) || [];
+  const combinedDatabase = [...foodDatabase, ...customFoods];
 
   // Limpiar el carrito cada vez que se abre el wizard
   useEffect(() => {
@@ -39,7 +44,7 @@ export default function MealWizard({ isOpen, onClose, mealTarget, isPreWorkout, 
   const isCompleted = remaining <= 0;
 
   // Filtrar alimentos
-  let availableFoods = foodDatabase.filter(f => f.category === currentCategory);
+  let availableFoods = combinedDatabase.filter(f => f.category === currentCategory);
   if (isPreWorkout && (currentCategory === 'protein' || currentCategory === 'carbs')) {
     availableFoods = availableFoods.filter(f => f.digestion !== 'slow');
   }
